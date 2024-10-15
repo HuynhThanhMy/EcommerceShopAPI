@@ -1,5 +1,7 @@
 using EcommerceWebAPI.Data;
 using Microsoft.EntityFrameworkCore;
+using EcommerceWebAPI.Services;//.net 5
+//using EcommerceWebAPI.Repositories; //.net 6
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +17,14 @@ builder.Services.AddCors(options => options.AddDefaultPolicy(policy => policy.Al
 builder.Services.AddDbContext<MyDbContext>(options => {
     options.UseSqlServer(builder.Configuration.GetConnectionString("MyDB"));
 });
+
+//builder.Services.AddAutoMapper(typeof(Program));//.net 6
+
+// Life cycle DI: AddSingleton(), AddTransient(), AddScoped()
+builder.Services.AddScoped<ICategoryRepository, CategoryRepository>();//.net 5
+//builder.Services.AddScoped<ICategoryRepository, CategoryRepositoryMemory>();//.net 5
+//builder.Services.AddScoped<ICategoryRepository, CategoryRepository>(); //.net 6
+builder.Services.AddScoped<IProductRepository, ProductRepository>();
 
 var app = builder.Build();
 

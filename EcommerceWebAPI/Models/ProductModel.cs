@@ -15,15 +15,11 @@ namespace EcommerceWebAPI.Models
     {
         public Guid ProductId { get; set; }
     }
-
-    //public class HangHoaVM
-    //{
-    //    public string TenHangHoa { get; set; }
-    //    public double DonGia { get; set; }
-    //}
-
-    //public class HangHoa : HangHoaVM
-    //{
-    //    public Guid MaHangHoa { get; set; }
-    //}
+    public class ProductModel1
+    {
+        public Guid ProductId { get; set; }
+        public string ProductName { get; set; }
+        public double Price { get; set; }
+        public string CategoryName { get; set; }
+    }
 }
