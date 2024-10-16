@@ -1,4 +1,5 @@
 ﻿using EcommerceWebAPI.Data;
+using EcommerceWebAPI.Helpers;
 using EcommerceWebAPI.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
@@ -13,19 +14,22 @@ namespace EcommerceWebAPI.Repositories
         private readonly UserManager<ApplicationUser> userManager;
         private readonly SignInManager<ApplicationUser> signInManager;
         private readonly IConfiguration configuration;
+        private readonly RoleManager<IdentityRole> roleManager;
 
-        public AccountRepository(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration)
+        public AccountRepository(UserManager<ApplicationUser> userManager, SignInManager<ApplicationUser> signInManager, IConfiguration configuration, RoleManager<IdentityRole> roleManager)
         {
             this.userManager = userManager;
             this.signInManager = signInManager;
             this.configuration = configuration;
+            this.roleManager = roleManager;
         }
 
         public async Task<string> SignInAsync(SignInModel model)
         {
-            var result = await signInManager.PasswordSignInAsync(model.Email, model.Password, false, false);
+            var user = await userManager.FindByEmailAsync(model.Email);
+            var passwordValid = await userManager.CheckPasswordAsync(user, model.Password);
 
-            if (!result.Succeeded)
+            if (user == null || !passwordValid)
             {
                 return string.Empty;
             }
@@ -35,6 +39,12 @@ namespace EcommerceWebAPI.Repositories
                 new Claim(ClaimTypes.Email, model.Email),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString())
             };
+
+            var userRoles = await userManager.GetRolesAsync(user);
+            foreach (var role in userRoles)
+            {
+                authClaims.Add(new Claim(ClaimTypes.Role, role.ToString()));
+            }
 
             var authenKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]));
 
@@ -59,7 +69,20 @@ namespace EcommerceWebAPI.Repositories
                 UserName = model.Email
             };
 
-            return await userManager.CreateAsync(user, model.Password);
+            var result = await userManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded)
+            {
+                //kiểm tra role Customer đã có
+                if (!await roleManager.RoleExistsAsync(AppRole.Customer))
+                {
+                    await roleManager.CreateAsync(new IdentityRole(AppRole.Customer));
+                }
+
+                await userManager.AddToRoleAsync(user, AppRole.Customer);
+            }
+
+            return result;
         }   
     }
 }

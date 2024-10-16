@@ -5,6 +5,7 @@ using EcommerceWebAPI.Repositories;
 using Microsoft.EntityFrameworkCore;
 using EcommerceWebAPI.Data;
 using Microsoft.AspNetCore.Authorization;
+using EcommerceWebAPI.Helpers;
 
 namespace EcommerceWebAPI.Controllers
 {
@@ -21,6 +22,7 @@ namespace EcommerceWebAPI.Controllers
         }
 
         [HttpGet]
+        [Authorize(Roles = AppRole.Customer)]
         public async Task<IActionResult> GetAllBooks()
         {
             try
@@ -41,7 +43,7 @@ namespace EcommerceWebAPI.Controllers
         }
 
         [HttpPost]
-        [Authorize]
+        [Authorize(Roles = AppRole.Customer)]
         public async Task<IActionResult> AddNewBook(CategoryModel model)
         {
             try
@@ -57,7 +59,7 @@ namespace EcommerceWebAPI.Controllers
         }
 
         [HttpPut("{id}")]
-        [Authorize]
+        [Authorize(Roles = AppRole.Admin)]
         public async Task<IActionResult> UpdateBook(int id, [FromBody] CategoryModel model)
         {
             if (id != model.CategoryId)
@@ -78,7 +80,7 @@ namespace EcommerceWebAPI.Controllers
         }
 
         [HttpDelete("{id}")]
-        [Authorize]
+        [Authorize(Roles = AppRole.Manager)]
         public async Task<IActionResult> DeleteBook([FromRoute] int id)
         {
             await _bookRepo.DeleteBookAsync(id);
